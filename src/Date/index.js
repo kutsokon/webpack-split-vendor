@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 
-function App() {
+export default function App() {
   const [date, setDate] = useState('Today is: ----');
   const [fetchingState, setFetchingState] = useState(null);
-  const clickHandler = () => {
+  const [isSwipeShown, setSwipe] = useState(false);
+  const Swipe = React.lazy(() =>
+    import(/* webpackChunkName: 'custom-swipe-component' */ '../Swipe')
+  );
+  const clickHandler = async e => {
     setFetchingState(true);
-    import(/* webpackChunkName: 'date-fns' */ 'date-fns').then(dateFns => {
-      const date = dateFns.format(new Date(), '[Today is:] dddd');
-      setDate(date);
-      setFetchingState(false);
-    });
+    const dateFns = await import(/* webpackChunkName: 'date-fns' */ 'date-fns');
+    setDate(dateFns.format(new Date(), '[Today is:] dddd'));
+    setFetchingState(false);
+  };
+  const showSwipeHandler = () => {
+    setSwipe(true);
   };
   const styles = {
     cursor: 'pointer'
@@ -17,12 +22,22 @@ function App() {
 
   return (
     <div>
-      <button style={styles} onClick={clickHandler}>
-        {fetchingState ? 'Loading... ' : 'Click here'}
-      </button>
-      <p>{date}</p>
+      <div className="date">
+        <button style={styles} onClick={clickHandler}>
+          {fetchingState ? 'Loading... ' : 'Click here'}
+        </button>
+        <p>{date}</p>
+      </div>
+      <div className="swipe">
+        <button style={styles} onClick={showSwipeHandler}>
+          Show swipe
+        </button>
+        {isSwipeShown ? (
+          <React.Suspense fallback={<div>Not a test</div>}>
+            <Swipe />
+          </React.Suspense>
+        ) : null}
+      </div>
     </div>
   );
 }
-
-export default App;
